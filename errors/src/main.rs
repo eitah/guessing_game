@@ -5,10 +5,11 @@ use std::io::ErrorKind;
 use std::io;
 #[allow(unused_imports)]
 use std::io::Read;
+use std::error::Error;
 
 #[allow(unused_variables)]
-fn main() {
-  let f = File::open("hello.txt");
+fn main()  {
+    let f = File::open("hello.txt");
 
   // less robust example for baby steps  reasons
   // let f = match f {
@@ -41,9 +42,16 @@ fn main() {
   // expect gives a clearer error message than unwrap but does the same thing
   // let f = File::open("hello.txt").expect("Failed to open hello.txt");
 
+  // uncomment main2 if you wanna see the production way to handle this.
   let f = read_username_from_file();
   println!("result of read username call is {:?}", f)
 }
+
+// fn main2() -> Result<(), Box<dyn Error>> {
+//   let _f = File::open("hello.txt")?;
+
+//   Ok(())
+// }
 
 // a semi-simple implementation of read username from file
 // fn read_username_from_file() -> Result<String, io::Error> {
