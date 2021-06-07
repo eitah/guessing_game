@@ -44,7 +44,8 @@ mod back_of_house {
   fn cook_order() {}
 }
 
-// this means that you dont have to keep secifying hosting everywhere
+// similar to creating a simlink to the hosting module in the current directory
+// add pub before the use here to expose the fn import to external callers.
 use crate::front_of_house::hosting;
 
 pub fn eat_at_restaurant() {
