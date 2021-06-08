@@ -1,99 +1,105 @@
-use std::fs;
-use std::error::Error;
 use std::env;
+use std::error::Error;
+use std::fs;
 
 pub struct Config {
-  pub query: String,
-  pub filename: String,
-  pub case_sensitive: bool,
+    pub query: String,
+    pub filename: String,
+    pub case_sensitive: bool,
 }
 
 impl Config {
-  pub fn new(args: &[String]) -> Result<Config, &str> {
-    if args.len() < 3 {
-      return Err("not enough arguments")
+    pub fn new(args: &[String]) -> Result<Config, &str> {
+        if args.len() < 3 {
+            return Err("not enough arguments");
+        }
+
+        let query = args[1].clone();
+        let filename = args[2].clone();
+        let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
+
+        Ok(Config {
+            query,
+            filename,
+            case_sensitive,
+        })
     }
-
-    let query = args[1].clone();
-    let filename = args[2].clone();
-    let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
-
-    Ok(Config{query, filename, case_sensitive})
-  }
 }
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-  let contents = fs::read_to_string(config.filename)?;
-  let results = if config.case_sensitive {
-    search(&config.query, &contents)
-  } else {
-    search_case_insensitive(&config.query, &contents)
-  };
-
-    for line in results {
-      println!("{}", line)
+    let contents = fs::read_to_string(config.filename)?;
+    let results = if config.case_sensitive {
+        search(&config.query, &contents)
+    } else {
+        search_case_insensitive(&config.query, &contents)
     };
 
-  Ok(())
+    for line in results {
+        println!("{}", line)
+    }
+
+    Ok(())
 }
 
 // Pseudocode:
-  // * iterarte through each contents line
-  // * Check whether the line contains our query string
-  // * If it does add it to the list of vecs returning
-  // * If it doesnt do nothing
-  // * Return the list of results that match
+// * iterarte through each contents line
+// * Check whether the line contains our query string
+// * If it does add it to the list of vecs returning
+// * If it doesnt do nothing
+// * Return the list of results that match
 // This lifetime tells rust that the life of the vec string is the same as the life
 // of the file contents since thats where our pointer will be.
-fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str>{
-  let mut matches: Vec<&str> = vec![];
-  for line in contents.lines() {
-    if line.contains(query) {
-      matches.push(line)
+fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    let mut matches: Vec<&str> = vec![];
+    for line in contents.lines() {
+        if line.contains(query) {
+            matches.push(line)
+        }
     }
-  }
 
-  matches
+    matches
 }
 
-fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str>{
-  let mut matches: Vec<&str> = vec![];
-  let query = query.to_lowercase();
-  for line in contents.lines() {
-    if line.to_lowercase().contains(&query) {
-      matches.push(line)
+fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    let mut matches: Vec<&str> = vec![];
+    let query = query.to_lowercase();
+    for line in contents.lines() {
+        if line.to_lowercase().contains(&query) {
+            matches.push(line)
+        }
     }
-  }
 
-  matches
+    matches
 }
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+    use super::*;
 
-  #[test]
-  fn case_sensitive() {
-    let query = "duct";
-    let contents = "\
+    #[test]
+    fn case_sensitive() {
+        let query = "duct";
+        let contents = "\
 Rust is cool:
 It does a lot of things
 safe, fast, productive.
 Duct tape.";
 
-    assert_eq!(vec!["safe, fast, productive."],  search(query, contents));
-  }
+        assert_eq!(vec!["safe, fast, productive."], search(query, contents));
+    }
 
-  #[test]
-  fn case_insensitive() {
-    let query = "duct";
-    let contents = "\
+    #[test]
+    fn case_insensitive() {
+        let query = "duct";
+        let contents = "\
 Rust is cool:
 It does a lot of things
 safe, fast, productive.
 Duct tape.";
 
-    assert_eq!(vec!["safe, fast, productive.", "Duct tape."],  search_case_insensitive(query, contents));
-
-  }
+        assert_eq!(
+            vec!["safe, fast, productive.", "Duct tape."],
+            search_case_insensitive(query, contents)
+        );
+    }
 }
